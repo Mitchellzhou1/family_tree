@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <title>家谱树</title>
+  <title>家谱树 - 树状图</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -13,58 +13,88 @@
     async function loadFamilyData() {
       try {
         const response = await fetch('family.json');
-        if (!response.ok) {
-          throw new Error('无法加载 family.json');
-        }
+        if (!response.ok) throw new Error('无法加载 family.json');
         const familyData = await response.json();
-        renderTree(familyData);
-      } catch (error) {
-        document.getElementById('tree').textContent = error.message;
+
+        // 找出根节点（没有父母的人）
+        const allNames = new Set(Object.keys(familyData));
+        const childrenNames = new Set();
+        for (const p of Object.values(familyData)) {
+          p["子女"].forEach(c => childrenNames.add(c));
+        }
+        const roots = [...allNames].filter(name => !childrenNames.has(name));
+
+        // 递归构建世代数组（每代一组）
+        const generations = [];
+        function buildGenerations(currentGenNames) {
+          if (currentGenNames.length === 0) return;
+          generations.push(currentGenNames);
+
+          // 找出下一代的孩子
+          let nextGen = [];
+          currentGenNames.forEach(name => {
+            const kids = familyData[name]?.["子女"] || [];
+            nextGen = nextGen.concat(kids);
+          });
+          nextGen = [...new Set(nextGen)]; // 去重
+          if (nextGen.length > 0) buildGenerations(nextGen);
+        }
+        buildGenerations(roots);
+
+        renderTree(familyData, generations);
+      } catch (err) {
+        document.getElementById('tree').textContent = err.message;
       }
     }
 
-    function createPersonElement(name, data) {
-      const personDiv = document.createElement("div");
-      personDiv.className = "person";
+    // 创建个人节点
+    function createPersonElement(name, data, hasSiblings) {
+      const personDiv = document.createElement('div');
+      personDiv.className = 'person';
+      if (!data["子女"] || data["子女"].length === 0) personDiv.classList.add('no-children');
+      if (!hasSiblings) personDiv.classList.add('no-sibling');
 
-      const nameDiv = document.createElement("div");
-      nameDiv.className = "name";
-      nameDiv.textContent = name + (data["曾用名"] ? `（曾用名：${data["曾用名"]}）` : "");
+      const img = document.createElement('img');
+      img.src = data["头像"] || 'https://via.placeholder.com/80?text=无图';
+      img.alt = name + '头像';
+      personDiv.appendChild(img);
 
-      const detailsDiv = document.createElement("div");
-      detailsDiv.className = "details";
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'name';
+      nameDiv.textContent = name + (data["曾用名"] ? `（曾用名：${data["曾用名"]}）` : '');
+      personDiv.appendChild(nameDiv);
+
+      const detailsDiv = document.createElement('div');
+      detailsDiv.className = 'details';
       detailsDiv.innerHTML = `
         性别：${data["性别"]}<br>
         出生日期：${data["出生日期"]}<br>
         婚姻状态：${data["婚姻状态"]}<br>
         备注：${data["备注"] || "无"}
       `;
-
-      personDiv.appendChild(nameDiv);
       personDiv.appendChild(detailsDiv);
-
-      if (data["子女"] && Object.keys(data["子女"]).length > 0) {
-        const childrenDiv = document.createElement("div");
-        childrenDiv.className = "children";
-
-        for (const childName in data["子女"]) {
-          const childElement = createPersonElement(childName, data["子女"][childName]);
-          childrenDiv.appendChild(childElement);
-        }
-
-        personDiv.appendChild(childrenDiv);
-      }
 
       return personDiv;
     }
 
-    function renderTree(data) {
-      const container = document.getElementById("tree");
-      container.innerHTML = '';  // Clear loading text
-      for (const name in data) {
-        const personElement = createPersonElement(name, data[name]);
-        container.appendChild(personElement);
-      }
+    // 渲染整棵树
+    function renderTree(familyData, generations) {
+      const container = document.getElementById('tree');
+      container.innerHTML = '';
+
+      generations.forEach(gen => {
+        const genDiv = document.createElement('div');
+        genDiv.className = 'generation';
+
+        gen.forEach((name, idx) => {
+          const data = familyData[name];
+          const hasSiblings = gen.length > 1;
+          const personEl = createPersonElement(name, data, hasSiblings);
+          genDiv.appendChild(personEl);
+        });
+
+        container.appendChild(genDiv);
+      });
     }
 
     loadFamilyData();
