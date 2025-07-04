@@ -4,83 +4,53 @@ body {
   margin: 0;
   padding: 30px;
   color: #333;
+  overflow-x: auto;
 }
 
 h1 {
   text-align: center;
   margin-bottom: 40px;
   color: #2c3e50;
+  user-select: none;
 }
 
-/* Tree container */
+/* Container for whole tree */
 .tree {
   display: flex;
-  justify-content: center;
   flex-direction: column;
   align-items: center;
+  min-width: 600px;
 }
 
-/* Each generation horizontally */
+/* Each generation row */
 .generation {
   display: flex;
   justify-content: center;
-  margin-bottom: 40px;
   position: relative;
+  margin-bottom: 70px;
 }
 
-/* Line connecting children to parent */
-.generation:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 2px;
-  height: 40px;
-  background: #3498db;
-  transform: translateX(-50%);
-  z-index: 0;
-}
-
-/* Person card */
+/* Person node */
 .person {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgb(0 0 0 / 0.15);
-  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   width: 160px;
+  padding: 15px;
   text-align: center;
   position: relative;
-  margin: 0 15px;
-  z-index: 1;
+  margin: 0 20px;
 }
 
-/* Connecting lines from parent to children */
-.person::before,
-.person::after {
-  content: '';
-  position: absolute;
-  top: -40px;
-  width: 2px;
-  height: 40px;
-  background: #3498db;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 0;
-}
-
-.person.no-children::before,
-.person.no-children::after {
-  display: none;
-}
-
-/* Profile picture */
+/* Profile pic */
 .person img {
   width: 80px;
   height: 80px;
   border-radius: 50%;
+  border: 3px solid #3498db;
   object-fit: cover;
-  border: 2px solid #3498db;
   margin-bottom: 10px;
+  user-select: none;
 }
 
 /* Name */
@@ -88,33 +58,82 @@ h1 {
   font-weight: 600;
   font-size: 18px;
   color: #2980b9;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
+  user-select: text;
 }
 
-/* Details text */
+/* Details */
 .person .details {
   font-size: 14px;
   color: #555;
   line-height: 1.3;
+  user-select: text;
 }
 
-/* Lines connecting siblings horizontally */
-.generation {
-  position: relative;
-}
-
-.generation > .person:not(:last-child)::after {
+/* Vertical connector line from person node downward */
+.person::after {
   content: '';
   position: absolute;
-  top: 0;
-  right: -15px;
-  width: 30px;
-  height: 2px;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 40px;
   background: #3498db;
   z-index: 0;
 }
 
-/* Hide lines for single child */
-.generation > .person.no-sibling::after {
+/* Remove vertical line if no children */
+.person.no-children::after {
   display: none;
+}
+
+/* Horizontal connector line between children (below parent connectors container) */
+.connectors {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 50px;
+  position: relative;
+  height: 20px;
+}
+
+/* Horizontal line */
+.connectors::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #3498db;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+
+/* Vertical lines from horizontal line down to each child */
+.connector-line {
+  position: relative;
+  flex-grow: 1;
+  height: 20px;
+  z-index: 1;
+}
+
+.connector-line::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 20px;
+  background: #3498db;
+  transform: translateX(-50%);
+}
+
+/* Remove vertical connector line for the first and last child for clean edges */
+.connector-line:first-child::after {
+  left: 25%;
+}
+
+.connector-line:last-child::after {
+  left: 75%;
 }
