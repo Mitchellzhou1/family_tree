@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>家谱树</title>
+  <style>
+    body {
+      font-family: "Microsoft YaHei", sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 40px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 40px;
+    }
+
+    .tree {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .person {
+      margin-left: 20px;
+      padding: 12px 16px;
+      border-left: 2px solid #3498db;
+      margin-bottom: 12px;
+      background-color: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      position: relative;
+    }
+
+    .person::before {
+      content: "";
+      position: absolute;
+      left: -10px;
+      top: 20px;
+      width: 10px;
+      height: 2px;
+      background-color: #3498db;
+    }
+
+    .name {
+      font-weight: bold;
+      font-size: 18px;
+      color: #2980b9;
+    }
+
+    .details {
+      margin-top: 4px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .children {
+      margin-left: 30px;
+      margin-top: 10px;
+      border-left: 1px dashed #ccc;
+      padding-left: 15px;
+    }
+  </style>
+</head>
+<body>
+  <h1>家谱树</h1>
+  <div id="tree" class="tree"></div>
+
+  <script>
+    const familyData = {
+      "张三": {
+        "曾用名": "张小三",
+        "性别": "男",
+        "出生日期": "1980-05-12",
+        "婚姻状态": "已婚",
+        "备注": "现居北京",
+        "子女": {
+          "张四": {
+            "曾用名": null,
+            "性别": "女",
+            "出生日期": "2010-08-23",
+            "婚姻状态": "未婚",
+            "备注": "喜欢画画",
+            "子女": {}
+          },
+          "张五": {
+            "曾用名": null,
+            "性别": "男",
+            "出生日期": "2013-11-05",
+            "婚姻状态": "未婚",
+            "备注": "喜欢足球",
+            "子女": {}
+          }
+        }
+      }
+    };
+
+    function createPersonElement(name, data) {
+      const personDiv = document.createElement("div");
+      personDiv.className = "person";
+
+      const nameDiv = document.createElement("div");
+      nameDiv.className = "name";
+      nameDiv.textContent = name + (data["曾用名"] ? `（曾用名：${data["曾用名"]}）` : "");
+
+      const detailsDiv = document.createElement("div");
+      detailsDiv.className = "details";
+      detailsDiv.innerHTML = `
+        性别：${data["性别"]}<br>
+        出生日期：${data["出生日期"]}<br>
+        婚姻状态：${data["婚姻状态"]}<br>
+        备注：${data["备注"] || "无"}
+      `;
+
+      personDiv.appendChild(nameDiv);
+      personDiv.appendChild(detailsDiv);
+
+      if (data["子女"] && Object.keys(data["子女"]).length > 0) {
+        const childrenDiv = document.createElement("div");
+        childrenDiv.className = "children";
+
+        for (const childName in data["子女"]) {
+          const childElement = createPersonElement(childName, data["子女"][childName]);
+          childrenDiv.appendChild(childElement);
+        }
+
+        personDiv.appendChild(childrenDiv);
+      }
+
+      return personDiv;
+    }
+
+    function renderTree(data) {
+      const container = document.getElementById("tree");
+      for (const name in data) {
+        const personElement = createPersonElement(name, data[name]);
+        container.appendChild(personElement);
+      }
+    }
+
+    renderTree(familyData);
+  </script>
+</body>
+</html>
